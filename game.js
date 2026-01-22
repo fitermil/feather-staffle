@@ -61,12 +61,15 @@ function handleGuess() {
 function renderResult(guess) {
   const tbody = document.getElementById("results");
 
+  // Create a new row for this guess
   const tr = document.createElement("tr");
 
+  // Name column
   const nameCell = document.createElement("td");
   nameCell.textContent = guess.name;
   tr.appendChild(nameCell);
 
+  // Add each field as a colored cell
   ["status", "rank", "year", "month", "reinstate"].forEach(key => {
     const td = document.createElement("td");
     td.textContent = guess[key];
@@ -80,5 +83,6 @@ function renderResult(guess) {
     tr.appendChild(td);
   });
 
+  // Append this guess row to the table
   tbody.appendChild(tr);
 }
