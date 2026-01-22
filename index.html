@@ -1,27 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Feather Staffle</title>
+  <title>Daily Character Guess Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      text-align: center;
+    }
+
+    input {
+      padding: 8px;
+      font-size: 16px;
+      width: 200px;
+    }
+
+    button {
+      padding: 8px 16px;
+      font-size: 16px;
+      margin-left: 10px;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Guess the Staff</h2>
+  <h1>Daily Character Guess</h1>
+  <p>Enter a name and see which attributes match today's answer!</p>
 
-<input id="guessInput" placeholder="Enter a name" />
-<button onclick="handleGuess()">Submit</button>
+  <input id="guessInput" placeholder="Enter a name" />
+  <button id="submitBtn" onclick="handleGuess()">Submit</button>
 
-<table border="1">
-  <thead>
-    <tr>
-      <th>Attributes</th>
-      <th>Your Guess</th>
-      <th>Match</th>
-    </tr>
-  </thead>
-  <tbody id="results"></tbody>
-</table>
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Your Guess</th>
+        <th>Match</th>
+      </tr>
+    </thead>
+    <tbody id="results">
+      <!-- Results will appear here -->
+    </tbody>
+  </table>
 
-<script src="game.js"></script>
+  <!-- Game logic -->
+  <script src="game.js"></script>
+
 </body>
 </html>
