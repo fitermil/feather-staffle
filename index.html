@@ -1,1 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Guess Game</title>
+</head>
+<body>
 
+<h2>Guess the Character</h2>
+
+<input id="guessInput" placeholder="Enter a name" />
+<button onclick="handleGuess()">Submit</button>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>Attributes</th>
+      <th>Your Guess</th>
+      <th>Match</th>
+    </tr>
+  </thead>
+  <tbody id="results"></tbody>
+</table>
+
+<script src="game.js"></script>
+</body>
+</html>
