@@ -1,4 +1,5 @@
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/gviz/tq?tqx=out:json";
+
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pub?output=csv";
 
 const DAILY_ANSWERS = {
   "2026-01-22": "Fitermil",
@@ -13,34 +14,34 @@ submitBtn.disabled = true;
 
 fetch(SHEET_URL)
   .then(res => res.text())
-  .then(text => {
-    const json = JSON.parse(text.substring(47).slice(0, -2));
-    DATA = json.table.rows.map(r => ({
-      name: r.c[0]?.v ?? "",
-      status: r.c[1]?.v ?? "",
-      rank: r.c[2]?.v ?? "",
-      year: r.c[3]?.v ?? "",
-      month: r.c[4]?.v ?? "",
-      reinstate: r.c[5]?.v ?? ""
-    }));
+  .then(csvText => {
+    const lines = csvText.trim().split("\n");
+
+    const headers = lines[0].split(",");
+
+    DATA = lines.slice(1).map(line => {
+      const values = line.split(",");
+      return {
+        name: values[0]?.trim() ?? "",
+        status: values[1]?.trim() ?? "",
+        rank: values[2]?.trim() ?? "",
+        year: values[3]?.trim() ?? "",
+        month: values[4]?.trim() ?? "",
+        reinstate: values[5]?.trim() ?? ""
+      };
+    });
 
     ANSWER = getDailyAnswer(DATA);
-
-    if (!ANSWER) {
-      alert("No hardcoded answer for today!");
-    }
-
     submitBtn.disabled = false;
   })
   .catch(err => {
-    console.error("Error loading Google Sheet:", err);
-    alert("Failed to load data. Check your sheet URL and permissions.");
+    console.error("Error loading CSV:", err);
+    alert("Failed to load CSV. Check your URL and publish settings.");
   });
 
 function getDailyAnswer(data) {
   const today = new Date().toISOString().slice(0, 10);
   const name = DAILY_ANSWERS[today];
-
   if (!name) return null;
 
   return data.find(x => x.name.toLowerCase() === name.toLowerCase());
@@ -71,6 +72,7 @@ function renderResult(guess) {
       <td>${guess[key]}</td>
       <td style="color: ${match ? "green" : "red"}">${match ? "YES" : "NO"}</td>
     `;
+
     tbody.appendChild(tr);
   });
 }
