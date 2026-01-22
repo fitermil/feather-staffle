@@ -20,13 +20,8 @@ fetch(SHEET_URL)
       status: r.c[5]?.v ?? ""
     }));
 
-    ANSWER = getDailyAnswer(DATA);
+    ANSWER = 'fitermil';
   });
-
-function getDailyAnswer(data) {
-  const day = Math.floor(Date.now() / 86400000);
-  return data[day % data.length];
-}
 
 function handleGuess() {
   if (!ANSWER) return;
