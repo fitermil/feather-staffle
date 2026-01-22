@@ -1,6 +1,6 @@
-const SHEET_ID = "YOUR_SHEET_ID_HERE";
+const SHEET_ID = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pubhtml";
 const SHEET_URL =
-  `https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pubhtml`;
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
 let DATA = [];
 let ANSWER = null;
@@ -13,11 +13,11 @@ fetch(SHEET_URL)
 
     DATA = json.table.rows.map(r => ({
       name: r.c[0]?.v ?? "",
-      role: r.c[1]?.v ?? "",
-      year: r.c[2]?.v ?? "",
-      month: r.c[3]?.v ?? "",
-      addRole: r.c[4]?.v ?? "",
-      status: r.c[5]?.v ?? ""
+      status: r.c[1]?.v ?? "",
+      rank: r.c[2]?.v ?? "",
+      year: r.c[3]?.v ?? "",
+      month: r.c[4]?.v ?? ""
+      reinstate: r.c[5]?.v ?? ""
     }));
 
     ANSWER = 'fitermil';
@@ -44,7 +44,7 @@ function renderResult(guess) {
   const tbody = document.getElementById("results");
   tbody.innerHTML = "";
 
-  ["role", "year", "month", "addRole", "status"].forEach(key => {
+  ["status", "rank", "year", "month", "reinstate"].forEach(key => {
     const tr = document.createElement("tr");
 
     const match = guess[key] === ANSWER[key];
