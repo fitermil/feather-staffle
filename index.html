@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Daily Character Guess Game</title>
+  <title>Daily Character Guess</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 600px;
+      max-width: 700px;
       margin: 50px auto;
       text-align: center;
     }
@@ -30,13 +30,26 @@
     }
 
     th, td {
-      padding: 8px;
+      padding: 12px;
       border: 1px solid #ccc;
       text-align: center;
+      font-weight: bold;
+      font-size: 16px;
     }
 
     th {
       background-color: #f4f4f4;
+    }
+
+    /* Green/Red tiles */
+    .correct {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .wrong {
+      background-color: #f44336;
+      color: white;
     }
   </style>
 </head>
@@ -51,18 +64,19 @@
   <table>
     <thead>
       <tr>
-        <th>Field</th>
-        <th>Your Guess</th>
-        <th>Match</th>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Rank</th>
+        <th>Year</th>
+        <th>Month</th>
+        <th>Reinstate</th>
       </tr>
     </thead>
     <tbody id="results">
-      <!-- Results will appear here -->
+      <!-- Each guess will be a new row -->
     </tbody>
   </table>
 
-  <!-- Game logic -->
   <script src="game.js"></script>
-
 </body>
 </html>
