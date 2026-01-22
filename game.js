@@ -7,15 +7,19 @@ const DAILY_ANSWERS = {
 
 let DATA = [];
 let ANSWER = null;
+let guesses = [];
 
 const submitBtn = document.getElementById("submitBtn");
 submitBtn.disabled = true;
+
+const todayKey = "dailyGuess_" + new Date().toISOString().slice(0, 10);
+const savedProgress = JSON.parse(localStorage.getItem(todayKey) || "[]");
+guesses = savedProgress.slice(); // load past guesses
 
 fetch(SHEET_URL)
   .then(res => res.text())
   .then(csvText => {
     const lines = csvText.trim().split("\n");
-
     const headers = lines[0].split(",");
 
     DATA = lines.slice(1).map(line => {
@@ -31,6 +35,9 @@ fetch(SHEET_URL)
     });
 
     ANSWER = getDailyAnswer(DATA);
+
+    guesses.forEach(g => renderResult(g));
+
     submitBtn.disabled = false;
   })
   .catch(err => {
@@ -49,13 +56,29 @@ function getDailyAnswer(data) {
 function handleGuess() {
   if (!ANSWER) return;
 
+  if (guesses.length >= 6) {
+    alert("You’ve used all 6 guesses! The answer was: " + ANSWER.name);
+    return;
+  }
+
   const input = document.getElementById("guessInput").value.trim();
   if (!input) return alert("Please enter a name.");
 
   const guess = DATA.find(x => x.name.toLowerCase() === input.toLowerCase());
   if (!guess) return alert("Name not found in dataset.");
 
+  guesses.push(guess);
+  localStorage.setItem(todayKey, JSON.stringify(guesses));
+
   renderResult(guess);
+
+  if (guess.name.toLowerCase() === ANSWER.name.toLowerCase()) {
+    alert(`🎉 You got it in ${guesses.length} guess${guesses.length > 1 ? "es" : ""}!`);
+    submitBtn.disabled = true;
+  } else if (guesses.length >= 6) {
+    alert("You've used all 6 guesses! The answer was: " + ANSWER.name);
+    submitBtn.disabled = true;
+  }
 }
 
 function renderResult(guess) {
