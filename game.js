@@ -13,14 +13,22 @@ const submitBtn = document.getElementById("submitBtn");
 submitBtn.disabled = true;
 
 const todayKey = "dailyGuess_" + new Date().toISOString().slice(0, 10);
-const savedProgress = JSON.parse(localStorage.getItem(todayKey) || "[]");
-guesses = savedProgress.slice(); // load past guesses
+
+const resetBtn = document.createElement("button");
+resetBtn.textContent = "Reset progress (test)";
+resetBtn.onclick = () => {
+  localStorage.removeItem(todayKey);
+  guesses = [];
+  document.getElementById("results").innerHTML = "";
+  submitBtn.disabled = false;
+  alert("Progress reset!");
+};
+document.body.insertBefore(resetBtn, submitBtn.nextSibling);
 
 fetch(SHEET_URL)
   .then(res => res.text())
   .then(csvText => {
     const lines = csvText.trim().split("\n");
-    const headers = lines[0].split(",");
 
     DATA = lines.slice(1).map(line => {
       const values = line.split(",");
@@ -36,9 +44,8 @@ fetch(SHEET_URL)
 
     ANSWER = getDailyAnswer(DATA);
 
-    guesses.forEach(g => renderResult(g));
-
-    submitBtn.disabled = false;
+    loadProgress();
+    submitBtn.disabled = !canPlayToday();
   })
   .catch(err => {
     console.error("Error loading CSV:", err);
@@ -49,17 +56,25 @@ function getDailyAnswer(data) {
   const today = new Date().toISOString().slice(0, 10);
   const name = DAILY_ANSWERS[today];
   if (!name) return null;
-
   return data.find(x => x.name.toLowerCase() === name.toLowerCase());
+}
+
+function loadProgress() {
+  const savedProgress = JSON.parse(localStorage.getItem(todayKey) || "[]");
+  guesses = savedProgress.slice();
+  guesses.forEach(g => renderResult(g));
+}
+
+function canPlayToday() {
+  if (!ANSWER) return false;
+  // If correct guess already made
+  if (guesses.some(g => g.name.toLowerCase() === ANSWER.name.toLowerCase())) return false;
+  return guesses.length < 6;
 }
 
 function handleGuess() {
   if (!ANSWER) return;
-
-  if (guesses.length >= 6) {
-    alert("You’ve used all 6 guesses! The answer was: " + ANSWER.name);
-    return;
-  }
+  if (!canPlayToday()) return showEndScreen();
 
   const input = document.getElementById("guessInput").value.trim();
   if (!input) return alert("Please enter a name.");
@@ -73,10 +88,10 @@ function handleGuess() {
   renderResult(guess);
 
   if (guess.name.toLowerCase() === ANSWER.name.toLowerCase()) {
-    alert(`🎉 You got it in ${guesses.length} guess${guesses.length > 1 ? "es" : ""}!`);
+    showEndScreen(true);
     submitBtn.disabled = true;
   } else if (guesses.length >= 6) {
-    alert("You've used all 6 guesses! The answer was: " + ANSWER.name);
+    showEndScreen(false);
     submitBtn.disabled = true;
   }
 }
@@ -84,6 +99,7 @@ function handleGuess() {
 function renderResult(guess) {
   const tbody = document.getElementById("results");
   const tr = document.createElement("tr");
+
   const nameCell = document.createElement("td");
   nameCell.textContent = guess.name;
   tr.appendChild(nameCell);
@@ -91,15 +107,27 @@ function renderResult(guess) {
   ["status", "rank", "year", "month", "reinstate"].forEach(key => {
     const td = document.createElement("td");
     td.textContent = guess[key];
-
-    if (ANSWER[key] === guess[key]) {
-      td.classList.add("correct");
-    } else {
-      td.classList.add("wrong");
-    }
-
+    td.classList.add(ANSWER[key] === guess[key] ? "correct" : "wrong");
     tr.appendChild(td);
   });
 
   tbody.appendChild(tr);
+}
+
+function showEndScreen(correct) {
+  const message = document.createElement("div");
+  message.style.marginTop = "20px";
+  message.style.fontSize = "20px";
+  message.style.fontWeight = "bold";
+
+  if (correct) {
+    message.textContent = `🎉 Correct! You got it in ${guesses.length} guess${guesses.length > 1 ? "es" : ""}.`;
+  } else {
+    message.textContent = `❌ All guesses used! The answer was: ${ANSWER.name}`;
+  }
+
+  submitBtn.disabled = true;
+  document.getElementById("guessInput").disabled = true;
+
+  document.body.appendChild(message);
 }
