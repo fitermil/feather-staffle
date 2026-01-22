@@ -60,18 +60,25 @@ function handleGuess() {
 
 function renderResult(guess) {
   const tbody = document.getElementById("results");
-  tbody.innerHTML = "";
+
+  const tr = document.createElement("tr");
+
+  const nameCell = document.createElement("td");
+  nameCell.textContent = guess.name;
+  tr.appendChild(nameCell);
 
   ["status", "rank", "year", "month", "reinstate"].forEach(key => {
-    const tr = document.createElement("tr");
-    const match = guess[key] === ANSWER[key];
+    const td = document.createElement("td");
+    td.textContent = guess[key];
 
-    tr.innerHTML = `
-      <td>${key}</td>
-      <td>${guess[key]}</td>
-      <td style="color: ${match ? "green" : "red"}">${match ? "YES" : "NO"}</td>
-    `;
+    if (ANSWER[key] === guess[key]) {
+      td.classList.add("correct");
+    } else {
+      td.classList.add("wrong");
+    }
 
-    tbody.appendChild(tr);
+    tr.appendChild(td);
   });
+
+  tbody.appendChild(tr);
 }
