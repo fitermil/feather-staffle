@@ -20,8 +20,27 @@ fetch(SHEET_URL)
       reinstate: r.c[5]?.v ?? ""
     }));
 
-    ANSWER = 'fitermil';
+    ANSWER = getDailyAnswer(DATA);
   });
+
+const DAILY_ANSWERS = {
+  "2026-01-22": "Fitermil",
+  "2026-01-23": "Trapane"
+};
+
+function getDailyAnswer(data) {
+  const today = new Date().toISOString().slice(0, 10);
+  const name = DAILY_ANSWERS[today];
+
+  if (!name) {
+    console.error("No hardcoded answer for today");
+    return null;
+  }
+
+  return data.find(
+    x => x.name.toLowerCase() === name.toLowerCase()
+  );
+}
 
 function handleGuess() {
   if (!ANSWER) return;
