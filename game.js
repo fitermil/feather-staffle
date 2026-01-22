@@ -1,11 +1,16 @@
-const SHEET_ID = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pubhtml";
-const SHEET_URL =
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/gviz/tq?tqx=out:json";
+
+const DAILY_ANSWERS = {
+  "2026-01-22": "Fitermil",
+  "2026-01-23": "Trapane"
+};
 
 let DATA = [];
 let ANSWER = null;
 
-// Load data from Google Sheets
+const submitBtn = document.getElementById("submitBtn");
+submitBtn.disabled = true;
+
 fetch(SHEET_URL)
   .then(res => res.text())
   .then(text => {
@@ -16,45 +21,40 @@ fetch(SHEET_URL)
       status: r.c[1]?.v ?? "",
       rank: r.c[2]?.v ?? "",
       year: r.c[3]?.v ?? "",
-      month: r.c[4]?.v ?? ""
+      month: r.c[4]?.v ?? "",
       reinstate: r.c[5]?.v ?? ""
     }));
 
     ANSWER = getDailyAnswer(DATA);
-  });
 
-const DAILY_ANSWERS = {
-  "2026-01-22": "Fitermil",
-  "2026-01-23": "Trapane"
-};
+    if (!ANSWER) {
+      alert("No hardcoded answer for today!");
+    }
+
+    submitBtn.disabled = false;
+  })
+  .catch(err => {
+    console.error("Error loading Google Sheet:", err);
+    alert("Failed to load data. Check your sheet URL and permissions.");
+  });
 
 function getDailyAnswer(data) {
   const today = new Date().toISOString().slice(0, 10);
   const name = DAILY_ANSWERS[today];
 
-  if (!name) {
-    console.error("No hardcoded answer for today");
-    return null;
-  }
+  if (!name) return null;
 
-  return data.find(
-    x => x.name.toLowerCase() === name.toLowerCase()
-  );
+  return data.find(x => x.name.toLowerCase() === name.toLowerCase());
 }
 
 function handleGuess() {
   if (!ANSWER) return;
 
   const input = document.getElementById("guessInput").value.trim();
+  if (!input) return alert("Please enter a name.");
 
-  const guess = DATA.find(
-    x => x.name.toLowerCase() === input.toLowerCase()
-  );
-
-  if (!guess) {
-    alert("Name not found");
-    return;
-  }
+  const guess = DATA.find(x => x.name.toLowerCase() === input.toLowerCase());
+  if (!guess) return alert("Name not found in dataset.");
 
   renderResult(guess);
 }
@@ -71,7 +71,7 @@ function renderResult(guess) {
     tr.innerHTML = `
       <td>${key}</td>
       <td>${guess[key]}</td>
-      <td>${match ? "YES" : "NO"}</td>
+      <td style="color: ${match ? "green" : "red"}">${match ? "YES" : "NO"}</td>
     `;
 
     tbody.appendChild(tr);
