@@ -1,8 +1,7 @@
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pub?output=csv";
 
 const DAILY_ANSWERS = {
-  "2026-01-22": "Fitermil",
-  "2026-01-23": "Trapane"
+  "2026-02-07": "Vikec_"
 };
 
 let DATA = [];
