@@ -16,13 +16,15 @@
             --correct-color: #15803d;
             --wrong-color: #b91c1c;
             --accent-color: #3b82f6;
+            --practice-color: #a855f7;
+            --modal-bg: rgba(0, 0, 0, 0.75);
         }
 
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 40px 20px 100px 20px;
             background-color: var(--bg-color);
             color: var(--text-color);
         }
@@ -30,12 +32,56 @@
         h1 {
             margin-bottom: 5px;
             font-size: 2.5rem;
+            text-align: center;
+        }
+
+        .header-container {
+            text-align: center;
+            margin-bottom: 25px;
         }
 
         .day-counter {
             color: var(--text-muted);
             font-size: 1.1rem;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .mode-badge {
+            background-color: var(--practice-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 8px;
+            vertical-align: middle;
+            display: none;
+        }
+
+        .bottom-left-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .bottom-left-controls button {
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .bottom-left-controls button:hover {
+            border-color: var(--accent-color);
+            background-color: var(--input-bg);
         }
 
         .controls {
@@ -104,6 +150,20 @@
         .share-btn {
             background-color: #10b981;
             margin-top: 15px;
+            margin-right: 10px;
+            display: inline-block;
+        }
+
+        .reopen-stats-btn {
+            background-color: #4b5563;
+            margin-top: 15px;
+            margin-right: 10px;
+            display: inline-block;
+        }
+
+        .next-practice-btn {
+            background-color: var(--practice-color);
+            margin-top: 15px;
             display: inline-block;
         }
 
@@ -152,13 +212,141 @@
             font-weight: bold;
             text-align: center;
         }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--modal-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            border-radius: 14px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .modal-close-btn:hover {
+            color: white;
+        }
+
+        .stats-grid {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        .distribution-title {
+            text-align: left;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .graph-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .graph-label {
+            width: 15px;
+            font-weight: bold;
+            color: var(--text-muted);
+            text-align: left;
+        }
+
+        .graph-bar-container {
+            flex-grow: 1;
+            margin-left: 8px;
+            text-align: left;
+        }
+
+        .graph-bar {
+            background-color: #4b5563;
+            color: white;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            min-width: 20px;
+            box-sizing: border-box;
+            text-align: right;
+        }
+
+        .graph-bar.highlight {
+            background-color: var(--correct-color);
+        }
     </style>
 </head>
 
 <body>
 
     <h1>Feather Staffle</h1>
-    <div class="day-counter" id="dayCounter">Day #1</div>
+    <div class="header-container">
+        <div class="day-counter" id="dayCounter">Day #1</div>
+        <span class="mode-badge" id="modeBadge">PRACTICE MODE</span>
+    </div>
+
+    <div class="bottom-left-controls">
+        <button id="modeToggleBtn" onclick="toggleGameMode()">🎯 Switch to Practice Mode</button>
+    </div>
 
     <div class="controls">
         <input id="guessInput" placeholder="Enter a name" list="staffOptions" autocomplete="off" />
@@ -183,42 +371,82 @@
         <tbody id="results"></tbody>
     </table>
 
+    <div class="modal-overlay" id="statsModalOverlay" onclick="closeStatsModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="closeStatsModal()">&times;</button>
+            <h2 style="margin-top: 0; font-size: 1.5rem;">Your Statistics</h2>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="statPlayed">0</div>
+                    <div class="stat-label">Played</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statWinPct">0%</div>
+                    <div class="stat-label">Win %</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statStreak">0</div>
+                    <div class="stat-label">Streak</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statMaxStreak">0</div>
+                    <div class="stat-label">Max Streak</div>
+                </div>
+            </div>
+
+            <div class="distribution-title">Guess Distribution</div>
+            <div id="guessDistributionGraph"></div>
+        </div>
+    </div>
+
     <script>
         const DATA_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pub?gid=0&single=true&output=csv";
         const ANSWERS_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pub?gid=1516262193&single=true&output=csv";
 
         const LAUNCH_DATE = new Date("2026-05-16");
-
-        // Define Rank order hierarchy (index 0 is highest rank)
         const RANK_ORDER = ["Manager", "Senior Admin", "Admin", "Senior Mod", "Mod", "Helper"];
 
         let DATA = [];
         let DAILY_ANSWERS = {};
+
+        let isPracticeMode = false;
         let ANSWER = null;
         let guesses = [];
         let currentDayNum = 1;
+        let statisticsUpdatedThisSession = false;
 
         const submitBtn = document.getElementById("submitBtn");
         const guessInput = document.getElementById("guessInput");
         const dayCounter = document.getElementById("dayCounter");
+        const modeBadge = document.getElementById("modeBadge");
+        const modeToggleBtn = document.getElementById("modeToggleBtn");
         const guessCounter = document.getElementById("guessCounter");
         const endMessage = document.getElementById("endMessage");
         const datalist = document.getElementById("staffOptions");
+        const statsModalOverlay = document.getElementById("statsModalOverlay");
 
         const todayStr = new Date().toLocaleDateString('en-CA');
         const todayKey = "dailyGuess_" + todayStr;
+        const statsKey = "staffle_player_stats";
 
         function updateDayCounter() {
-            const todayDate = new Date(todayStr);
-            const timeDiff = todayDate.getTime() - LAUNCH_DATE.getTime();
-            currentDayNum = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
-            dayCounter.textContent = `Day #${currentDayNum > 0 ? currentDayNum : 1}`;
+            if (isPracticeMode) {
+                dayCounter.textContent = "Infinite Practice Room";
+                modeBadge.style.display = "inline-block";
+            } else {
+                const todayDate = new Date(todayStr);
+                const timeDiff = todayDate.getTime() - LAUNCH_DATE.getTime();
+                currentDayNum = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
+                dayCounter.textContent = `Day #${currentDayNum > 0 ? currentDayNum : 1}`;
+                modeBadge.style.display = "none";
+            }
         }
 
         function updateRemainingGuesses() {
             const left = 6 - guesses.length;
             guessCounter.textContent = `${left} guess${left !== 1 ? 'es' : ''} remaining`;
-            
+
             guessCounter.className = "guess-counter";
             if (left === 2) guessCounter.classList.add("warning");
             if (left === 1) guessCounter.classList.add("critical");
@@ -237,7 +465,114 @@
             }
         });
 
+        function getStats() {
+            const defaultStats = {
+                played: 0,
+                won: 0,
+                currentStreak: 0,
+                maxStreak: 0,
+                lastPlayedDate: "",
+                distribution: { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0 }
+            };
+            try {
+                let stored = JSON.parse(localStorage.getItem(statsKey));
+                if (stored && !stored.distribution) {
+                    stored.distribution = defaultStats.distribution;
+                }
+                return stored || defaultStats;
+            } catch (e) {
+                return defaultStats;
+            }
+        }
+
+        function saveStats(stats) {
+            localStorage.setItem(statsKey, JSON.stringify(stats));
+        }
+
+        function openStatsModal() {
+            const stats = getStats();
+            document.getElementById("statPlayed").textContent = stats.played;
+
+            const winPct = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
+            document.getElementById("statWinPct").textContent = winPct + "%";
+            document.getElementById("statStreak").textContent = stats.currentStreak;
+            document.getElementById("statMaxStreak").textContent = stats.maxStreak;
+
+            const graphContainer = document.getElementById("guessDistributionGraph");
+            graphContainer.innerHTML = "";
+
+            const maxVal = Math.max(...Object.values(stats.distribution), 1);
+
+            let winningIndex = -1;
+            if (!isPracticeMode && ANSWER) {
+                winningIndex = guesses.findIndex(g => g.name.toLowerCase() === ANSWER.name.toLowerCase());
+            }
+
+            for (let i = 1; i <= 6; i++) {
+                const rowCount = stats.distribution[i] || 0;
+                const pctWidth = Math.max((rowCount / maxVal) * 100, 7);
+
+                const row = document.createElement("div");
+                row.className = "graph-row";
+
+                const label = document.createElement("div");
+                label.className = "graph-label";
+                label.textContent = i;
+
+                const barContainer = document.createElement("div");
+                barContainer.className = "graph-bar-container";
+
+                const bar = document.createElement("div");
+                bar.className = "graph-bar";
+                if (winningIndex !== -1 && (winningIndex + 1) === i) {
+                    bar.classList.add("highlight");
+                }
+                bar.style.width = pctWidth + "%";
+                bar.textContent = rowCount;
+
+                barContainer.appendChild(bar);
+                row.appendChild(label);
+                row.appendChild(barContainer);
+                graphContainer.appendChild(row);
+            }
+
+            statsModalOverlay.classList.add("active");
+        }
+
+        function closeStatsModal() {
+            statsModalOverlay.classList.remove("active");
+        }
+
+        function recordGameStats(isWin, guessCountUsed) {
+            if (isPracticeMode || statisticsUpdatedThisSession) return;
+
+            const stats = getStats();
+            if (stats.lastPlayedDate === todayStr) return;
+
+            stats.played += 1;
+            stats.lastPlayedDate = todayStr;
+
+            if (isWin) {
+                stats.won += 1;
+                stats.currentStreak += 1;
+                if (stats.currentStreak > stats.maxStreak) {
+                    stats.maxStreak = stats.currentStreak;
+                }
+                stats.distribution[guessCountUsed] = (stats.distribution[guessCountUsed] || 0) + 1;
+            } else {
+                stats.currentStreak = 0;
+            }
+
+            saveStats(stats);
+            statisticsUpdatedThisSession = true;
+        }
+
         function resetProgress() {
+            if (isPracticeMode) {
+                startNewPracticeMatch();
+                alert("New practice match generated!");
+                return;
+            }
             localStorage.removeItem(todayKey);
             guesses = [];
             document.getElementById("results").innerHTML = "";
@@ -246,7 +581,8 @@
             guessInput.value = "";
             submitBtn.disabled = !canPlayToday();
             updateRemainingGuesses();
-            alert("Progress reset!");
+            statisticsUpdatedThisSession = false;
+            alert("Daily progress reset!");
         }
 
         function cleanCSVLines(text) {
@@ -289,23 +625,62 @@
                     }
                 });
 
-                ANSWER = getDailyAnswer(DATA);
-                updateDayCounter();
-                loadProgress();
-
-                if (!ANSWER) {
-                    endMessage.innerHTML = `<div>⚠️ No daily challenge configured for today's date (${todayStr}).</div>`;
-                    endMessage.style.display = "block";
-                    submitBtn.disabled = true;
-                    guessInput.disabled = true;
-                } else {
-                    submitBtn.disabled = !canPlayToday();
-                }
+                initDailyGame();
             })
             .catch(err => {
                 console.error("Initialization Error:", err);
                 alert("Failed to load spreadsheet assets. Verify your URLs and Publish settings.");
             });
+
+        function initDailyGame() {
+            isPracticeMode = false;
+            ANSWER = getDailyAnswer(DATA);
+            updateDayCounter();
+
+            document.getElementById("results").innerHTML = "";
+            endMessage.style.display = "none";
+            guessInput.disabled = false;
+            guessInput.value = "";
+
+            loadDailyProgress();
+
+            if (!ANSWER) {
+                endMessage.innerHTML = `<div>⚠️ No daily challenge configured for today's date (${todayStr}).</div>`;
+                endMessage.style.display = "block";
+                submitBtn.disabled = true;
+                guessInput.disabled = true;
+            } else {
+                submitBtn.disabled = !canPlayToday();
+            }
+        }
+
+        function toggleGameMode() {
+            if (!isPracticeMode) {
+                isPracticeMode = true;
+                modeToggleBtn.textContent = "🎯 Switch to Daily Challenge";
+                startNewPracticeMatch();
+            } else {
+                modeToggleBtn.textContent = "🎯 Switch to Practice Mode";
+                initDailyGame();
+            }
+        }
+
+        function startNewPracticeMatch() {
+            if (DATA.length === 0) return;
+
+            guesses = [];
+            document.getElementById("results").innerHTML = "";
+            endMessage.style.display = "none";
+            guessInput.disabled = false;
+            guessInput.value = "";
+            submitBtn.disabled = false;
+
+            const randomIndex = Math.floor(Math.random() * DATA.length);
+            ANSWER = DATA[randomIndex];
+
+            updateDayCounter();
+            updateRemainingGuesses();
+        }
 
         function getDailyAnswer(data) {
             const name = DAILY_ANSWERS[todayStr];
@@ -313,16 +688,16 @@
             return data.find(x => x.name.toLowerCase() === name.toLowerCase());
         }
 
-        function loadProgress() {
+        function loadDailyProgress() {
             const savedProgress = JSON.parse(localStorage.getItem(todayKey) || "[]");
             guesses = savedProgress.slice();
             guesses.forEach(g => renderResult(g));
             updateRemainingGuesses();
 
             if (guesses.some(g => g.name.toLowerCase() === ANSWER?.name.toLowerCase())) {
-                showEndScreen(true);
+                showEndScreen(true, true);
             } else if (guesses.length >= 6) {
-                showEndScreen(false);
+                showEndScreen(false, true);
             }
         }
 
@@ -346,27 +721,29 @@
             }
 
             guesses.push(guess);
-            localStorage.setItem(todayKey, JSON.stringify(guesses));
+
+            if (!isPracticeMode) {
+                localStorage.setItem(todayKey, JSON.stringify(guesses));
+            }
 
             renderResult(guess);
             updateRemainingGuesses();
             guessInput.value = "";
 
             if (guess.name.toLowerCase() === ANSWER.name.toLowerCase()) {
-                showEndScreen(true);
+                showEndScreen(true, false);
             } else if (guesses.length >= 6) {
-                showEndScreen(false);
+                showEndScreen(false, false);
             }
         }
 
-        // Helper to turn month inputs into standard integers
         function parseMonth(monthVal) {
             const num = parseInt(monthVal);
             if (!isNaN(num)) return num;
-            
+
             const monthsShort = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
             const cleanStr = monthVal.toLowerCase().substring(0, 3);
-            return monthsShort.indexOf(cleanStr) + 1; 
+            return monthsShort.indexOf(cleanStr) + 1;
         }
 
         function renderResult(guess) {
@@ -382,7 +759,6 @@
                 const td = document.createElement("td");
                 let text = guess[key];
 
-                // Year Direction Logic
                 if (key === "year") {
                     const guessNum = parseInt(guess[key]);
                     const answerNum = parseInt(ANSWER[key]);
@@ -392,7 +768,6 @@
                     }
                 }
 
-                // Month Direction Logic
                 if (key === "month") {
                     const guessMon = parseMonth(guess[key]);
                     const answerMon = parseMonth(ANSWER[key]);
@@ -402,13 +777,12 @@
                     }
                 }
 
-                // Rank Direction Logic (Lower index in RANK_ORDER means a higher tier position)
                 if (key === "rank") {
                     const guessIdx = RANK_ORDER.findIndex(r => r.toLowerCase() === guess[key].toLowerCase());
                     const answerIdx = RANK_ORDER.findIndex(r => r.toLowerCase() === ANSWER[key].toLowerCase());
                     if (guessIdx !== -1 && answerIdx !== -1) {
-                        if (guessIdx > answerIdx) text += " ⬆️"; // Target rank index is smaller (higher up array)
-                        else if (guessIdx < answerIdx) text += " ⬇️"; // Target rank index is larger (further down array)
+                        if (guessIdx > answerIdx) text += " ⬆️";
+                        else if (guessIdx < answerIdx) text += " ⬇️";
                     }
                 }
 
@@ -421,22 +795,18 @@
         }
 
         function generateShareGrid() {
-            let gridText = `Feather Staffle Day #` + currentDayNum + ` (${guesses.length}/6)\n`;
-            
-            // Generate rows grid chronologically
+            let titleHeader = isPracticeMode ? "Feather Staffle (Practice Match)" : `Feather Staffle Day #` + currentDayNum;
+            let gridText = `${titleHeader} (${guesses.length}/6)\n`;
+
             guesses.forEach(guess => {
                 let rowEmojis = "";
-                
-                // Name check
                 rowEmojis += (guess.name.toLowerCase() === ANSWER.name.toLowerCase()) ? "🟩" : "🟥";
-                
-                // Other attributes check
                 ["status", "rank", "year", "month", "reinstate"].forEach(key => {
                     rowEmojis += (guess[key].toLowerCase() === ANSWER[key].toLowerCase()) ? "🟩" : "🟥";
                 });
                 gridText += rowEmojis + "\n";
             });
-            
+
             navigator.clipboard.writeText(gridText).then(() => {
                 alert("Results copied to your clipboard!");
             }).catch(err => {
@@ -444,22 +814,34 @@
             });
         }
 
-        function showEndScreen(correct) {
+        function showEndScreen(correct, isLoadMode) {
             let messageHtml = "";
             if (correct) {
                 messageHtml = `<div>🎉 Correct! You got it in ${guesses.length} guess${guesses.length > 1 ? "es" : ""}.</div>`;
                 endMessage.style.borderColor = varToString('--correct-color');
+                if (!isLoadMode) recordGameStats(true, guesses.length);
             } else {
                 messageHtml = `<div>❌ All guesses used! The answer was: ${ANSWER.name}</div>`;
                 endMessage.style.borderColor = varToString('--wrong-color');
+                if (!isLoadMode) recordGameStats(false, guesses.length);
             }
 
-            messageHtml += `<button class="share-btn" onclick="generateShareGrid()">Share</button>`;
+            messageHtml += `<button class="share-btn" onclick="generateShareGrid()">Copy Shareable Grid</button>`;
+            messageHtml += `<button class="reopen-stats-btn" onclick="openStatsModal()">📊 Re-view Stats</button>`;
+
+            if (isPracticeMode) {
+                messageHtml += `<button class="next-practice-btn" onclick="startNewPracticeMatch()">Play Another Practice Match</button>`;
+            }
+
             endMessage.innerHTML = messageHtml;
             endMessage.style.display = "block";
-            
+
             submitBtn.disabled = true;
             guessInput.disabled = true;
+
+            if (!isLoadMode) {
+                setTimeout(openStatsModal, 400);
+            }
         }
 
         function varToString(varName) {
