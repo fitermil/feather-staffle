@@ -791,7 +791,8 @@
                 tr.appendChild(td);
             });
 
-            tbody.insertBefore(tr, tbody.firstChild);
+            // Appends rows at the bottom so new answers sit beneath older entries
+            tbody.appendChild(tr);
         }
 
         function generateShareGrid() {
@@ -826,8 +827,8 @@
                 if (!isLoadMode) recordGameStats(false, guesses.length);
             }
 
-            messageHtml += `<button class="share-btn" onclick="generateShareGrid()">Copy Shareable Grid</button>`;
-            messageHtml += `<button class="reopen-stats-btn" onclick="openStatsModal()">📊 Re-view Stats</button>`;
+            messageHtml += `<button class="share-btn" onclick="generateShareGrid()">Share</button>`;
+            messageHtml += `<button class="reopen-stats-btn" onclick="openStatsModal()">📊 View Stats</button>`;
 
             if (isPracticeMode) {
                 messageHtml += `<button class="next-practice-btn" onclick="startNewPracticeMatch()">Play Another Practice Match</button>`;
