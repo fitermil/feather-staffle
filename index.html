@@ -159,14 +159,13 @@
     </table>
 
     <script>
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pub?output=csv";
+        const DATA_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pub?gid=0&single=true&output=csv";
+        const ANSWERS_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pub?gid=1516262193&single=true&output=csv";
 
-        const LAUNCH_DATE = new Date("2026-02-07");
-        const DAILY_ANSWERS = {
-            "2026-05-16": "Vikec_"
-        };
+        const LAUNCH_DATE = new Date("2026-05-16");
 
         let DATA = [];
+        let DAILY_ANSWERS = {};
         let ANSWER = null;
         let guesses = [];
 
@@ -176,7 +175,7 @@
         const endMessage = document.getElementById("endMessage");
         const datalist = document.getElementById("staffOptions");
 
-        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayStr = new Date().toLocaleDateString('en-CA');
         const todayKey = "dailyGuess_" + todayStr;
 
         function updateDayCounter() {
@@ -210,12 +209,17 @@
             alert("Progress reset!");
         }
 
-        fetch(SHEET_URL)
-            .then(res => res.text())
-            .then(csvText => {
-                const lines = csvText.trim().split("\n");
+        function cleanCSVLines(text) {
+            return text.replace(/\r/g, "").trim().split("\n");
+        }
 
-                DATA = lines.slice(1).map(line => {
+        Promise.all([
+            fetch(DATA_SHEET_URL).then(res => { if (!res.ok) throw new Error("Data sheet failed"); return res.text(); }),
+            fetch(ANSWERS_SHEET_URL).then(res => { if (!res.ok) throw new Error("Answers sheet failed"); return res.text(); })
+        ])
+            .then(([dataCsv, answersCsv]) => {
+                const dataLines = cleanCSVLines(dataCsv);
+                DATA = dataLines.slice(1).map(line => {
                     const values = line.split(",");
                     return {
                         name: values[0]?.trim() ?? "",
@@ -227,10 +231,22 @@
                     };
                 }).filter(x => x.name !== "");
 
+                datalist.innerHTML = "";
                 DATA.forEach(item => {
                     const option = document.createElement("option");
                     option.value = item.name;
                     datalist.appendChild(option);
+                });
+
+                const answerLines = cleanCSVLines(answersCsv);
+                DAILY_ANSWERS = {};
+                answerLines.slice(1).forEach(line => {
+                    const values = line.split(",");
+                    const dateKey = values[0]?.trim();
+                    const nameValue = values[1]?.trim();
+                    if (dateKey && nameValue) {
+                        DAILY_ANSWERS[dateKey] = nameValue;
+                    }
                 });
 
                 ANSWER = getDailyAnswer(DATA);
@@ -238,7 +254,7 @@
                 loadProgress();
 
                 if (!ANSWER) {
-                    endMessage.textContent = "⚠️ No daily challenge configured for today's date.";
+                    endMessage.textContent = `⚠️ No daily challenge configured for today's date (${todayStr}).`;
                     endMessage.style.display = "block";
                     submitBtn.disabled = true;
                     guessInput.disabled = true;
@@ -247,8 +263,8 @@
                 }
             })
             .catch(err => {
-                console.error("Error loading CSV:", err);
-                alert("Failed to load data. Please ensure your Google Sheet is published to web as a CSV.");
+                console.error("Initialization Error:", err);
+                alert("Failed to load spreadsheet assets. Verify your URLs and Publish settings.");
             });
 
         function getDailyAnswer(data) {
