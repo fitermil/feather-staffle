@@ -42,8 +42,25 @@
             display: flex;
             justify-content: center;
             gap: 10px;
-            margin-bottom: 30px;
+            margin-bottom: 5px;
             position: relative;
+        }
+
+        .guess-counter {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+        }
+
+        .guess-counter.warning {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+
+        .guess-counter.critical {
+            color: var(--wrong-color);
+            font-weight: bold;
         }
 
         input {
@@ -82,6 +99,12 @@
             background-color: var(--border-color);
             color: var(--text-muted);
             cursor: not-allowed;
+        }
+
+        .share-btn {
+            background-color: #10b981;
+            margin-top: 15px;
+            display: inline-block;
         }
 
         table {
@@ -127,6 +150,7 @@
             border: 1px solid var(--border-color);
             font-size: 20px;
             font-weight: bold;
+            text-align: center;
         }
     </style>
 </head>
@@ -141,6 +165,7 @@
         <datalist id="staffOptions"></datalist>
         <button id="submitBtn" onclick="handleGuess()">Submit</button>
     </div>
+    <div class="guess-counter" id="guessCounter">6 guesses remaining</div>
 
     <div id="endMessage" style="display: none;"></div>
 
@@ -164,14 +189,19 @@
 
         const LAUNCH_DATE = new Date("2026-05-16");
 
+        // Define Rank order hierarchy (index 0 is highest rank)
+        const RANK_ORDER = ["Manager", "Senior Admin", "Admin", "Senior Mod", "Mod", "Helper"];
+
         let DATA = [];
         let DAILY_ANSWERS = {};
         let ANSWER = null;
         let guesses = [];
+        let currentDayNum = 1;
 
         const submitBtn = document.getElementById("submitBtn");
         const guessInput = document.getElementById("guessInput");
         const dayCounter = document.getElementById("dayCounter");
+        const guessCounter = document.getElementById("guessCounter");
         const endMessage = document.getElementById("endMessage");
         const datalist = document.getElementById("staffOptions");
 
@@ -181,8 +211,17 @@
         function updateDayCounter() {
             const todayDate = new Date(todayStr);
             const timeDiff = todayDate.getTime() - LAUNCH_DATE.getTime();
-            const dayNum = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
-            dayCounter.textContent = `Day #${dayNum > 0 ? dayNum : 1}`;
+            currentDayNum = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
+            dayCounter.textContent = `Day #${currentDayNum > 0 ? currentDayNum : 1}`;
+        }
+
+        function updateRemainingGuesses() {
+            const left = 6 - guesses.length;
+            guessCounter.textContent = `${left} guess${left !== 1 ? 'es' : ''} remaining`;
+            
+            guessCounter.className = "guess-counter";
+            if (left === 2) guessCounter.classList.add("warning");
+            if (left === 1) guessCounter.classList.add("critical");
         }
 
         guessInput.addEventListener("keydown", function (e) {
@@ -206,6 +245,7 @@
             guessInput.disabled = false;
             guessInput.value = "";
             submitBtn.disabled = !canPlayToday();
+            updateRemainingGuesses();
             alert("Progress reset!");
         }
 
@@ -254,7 +294,7 @@
                 loadProgress();
 
                 if (!ANSWER) {
-                    endMessage.textContent = `⚠️ No daily challenge configured for today's date (${todayStr}).`;
+                    endMessage.innerHTML = `<div>⚠️ No daily challenge configured for today's date (${todayStr}).</div>`;
                     endMessage.style.display = "block";
                     submitBtn.disabled = true;
                     guessInput.disabled = true;
@@ -277,6 +317,7 @@
             const savedProgress = JSON.parse(localStorage.getItem(todayKey) || "[]");
             guesses = savedProgress.slice();
             guesses.forEach(g => renderResult(g));
+            updateRemainingGuesses();
 
             if (guesses.some(g => g.name.toLowerCase() === ANSWER?.name.toLowerCase())) {
                 showEndScreen(true);
@@ -308,6 +349,7 @@
             localStorage.setItem(todayKey, JSON.stringify(guesses));
 
             renderResult(guess);
+            updateRemainingGuesses();
             guessInput.value = "";
 
             if (guess.name.toLowerCase() === ANSWER.name.toLowerCase()) {
@@ -315,6 +357,16 @@
             } else if (guesses.length >= 6) {
                 showEndScreen(false);
             }
+        }
+
+        // Helper to turn month inputs into standard integers
+        function parseMonth(monthVal) {
+            const num = parseInt(monthVal);
+            if (!isNaN(num)) return num;
+            
+            const monthsShort = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+            const cleanStr = monthVal.toLowerCase().substring(0, 3);
+            return monthsShort.indexOf(cleanStr) + 1; 
         }
 
         function renderResult(guess) {
@@ -330,7 +382,8 @@
                 const td = document.createElement("td");
                 let text = guess[key];
 
-                if (key === "year" || key === "month") {
+                // Year Direction Logic
+                if (key === "year") {
                     const guessNum = parseInt(guess[key]);
                     const answerNum = parseInt(ANSWER[key]);
                     if (!isNaN(guessNum) && !isNaN(answerNum)) {
@@ -339,24 +392,72 @@
                     }
                 }
 
+                // Month Direction Logic
+                if (key === "month") {
+                    const guessMon = parseMonth(guess[key]);
+                    const answerMon = parseMonth(ANSWER[key]);
+                    if (guessMon > 0 && answerMon > 0) {
+                        if (guessMon < answerMon) text += " ⬆️";
+                        else if (guessMon > answerMon) text += " ⬇️";
+                    }
+                }
+
+                // Rank Direction Logic (Lower index in RANK_ORDER means a higher tier position)
+                if (key === "rank") {
+                    const guessIdx = RANK_ORDER.findIndex(r => r.toLowerCase() === guess[key].toLowerCase());
+                    const answerIdx = RANK_ORDER.findIndex(r => r.toLowerCase() === ANSWER[key].toLowerCase());
+                    if (guessIdx !== -1 && answerIdx !== -1) {
+                        if (guessIdx > answerIdx) text += " ⬆️"; // Target rank index is smaller (higher up array)
+                        else if (guessIdx < answerIdx) text += " ⬇️"; // Target rank index is larger (further down array)
+                    }
+                }
+
                 td.textContent = text;
-                td.classList.add(ANSWER[key] === guess[key] ? "correct" : "wrong");
+                td.classList.add(ANSWER[key].toLowerCase() === guess[key].toLowerCase() ? "correct" : "wrong");
                 tr.appendChild(td);
             });
 
             tbody.insertBefore(tr, tbody.firstChild);
         }
 
+        function generateShareGrid() {
+            let gridText = `Feather Staffle Day #` + currentDayNum + ` (${guesses.length}/6)\n`;
+            
+            // Generate rows grid chronologically
+            guesses.forEach(guess => {
+                let rowEmojis = "";
+                
+                // Name check
+                rowEmojis += (guess.name.toLowerCase() === ANSWER.name.toLowerCase()) ? "🟩" : "🟥";
+                
+                // Other attributes check
+                ["status", "rank", "year", "month", "reinstate"].forEach(key => {
+                    rowEmojis += (guess[key].toLowerCase() === ANSWER[key].toLowerCase()) ? "🟩" : "🟥";
+                });
+                gridText += rowEmojis + "\n";
+            });
+            
+            navigator.clipboard.writeText(gridText).then(() => {
+                alert("Results copied to your clipboard!");
+            }).catch(err => {
+                alert("Failed to copy results automatically.");
+            });
+        }
+
         function showEndScreen(correct) {
+            let messageHtml = "";
             if (correct) {
-                endMessage.textContent = `🎉 Correct! You got it in ${guesses.length} guess${guesses.length > 1 ? "es" : ""}.`;
+                messageHtml = `<div>🎉 Correct! You got it in ${guesses.length} guess${guesses.length > 1 ? "es" : ""}.</div>`;
                 endMessage.style.borderColor = varToString('--correct-color');
             } else {
-                endMessage.textContent = `❌ All guesses used! The answer was: ${ANSWER.name}`;
+                messageHtml = `<div>❌ All guesses used! The answer was: ${ANSWER.name}</div>`;
                 endMessage.style.borderColor = varToString('--wrong-color');
             }
 
+            messageHtml += `<button class="share-btn" onclick="generateShareGrid()">Copy Shareable Grid</button>`;
+            endMessage.innerHTML = messageHtml;
             endMessage.style.display = "block";
+            
             submitBtn.disabled = true;
             guessInput.disabled = true;
         }
