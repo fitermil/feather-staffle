@@ -1,82 +1,363 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Feather Staffle</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 50px auto;
-      text-align: center;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feather Staffle</title>
+    <style>
+        :root {
+            --bg-color: #121214;
+            --container-bg: #1a1a1e;
+            --border-color: #2f2f37;
+            --text-color: #ffffff;
+            --text-muted: #a1a1aa;
+            --input-bg: #27272a;
+            --correct-color: #15803d;
+            --wrong-color: #b91c1c;
+            --accent-color: #3b82f6;
+        }
 
-    input {
-      padding: 8px;
-      font-size: 16px;
-      width: 200px;
-    }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
 
-    button {
-      padding: 8px 16px;
-      font-size: 16px;
-      margin-left: 10px;
-    }
+        h1 {
+            margin-bottom: 5px;
+            font-size: 2.5rem;
+        }
 
-    table {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-    }
+        .day-counter {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+        }
 
-    th, td {
-      padding: 12px;
-      border: 1px solid #ccc;
-      text-align: center;
-      font-weight: bold;
-      font-size: 16px;
-    }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            position: relative;
+        }
 
-    th {
-      background-color: #f4f4f4;
-    }
+        input {
+            padding: 12px 16px;
+            font-size: 16px;
+            width: 250px;
+            background-color: var(--input-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            outline: none;
+            transition: border-color 0.2s;
+        }
 
-    /* Green/Red tiles */
-    .correct {
-      background-color: #4caf50;
-      color: white;
-    }
+        input:focus {
+            border-color: var(--accent-color);
+        }
 
-    .wrong {
-      background-color: #f44336;
-      color: white;
-    }
-  </style>
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            background-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: separate;
+            border-spacing: 6px;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 15px;
+            border-radius: 6px;
+            background-color: var(--container-bg);
+        }
+
+        th {
+            background-color: transparent;
+            color: var(--text-muted);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .correct {
+            background-color: var(--correct-color);
+            color: white;
+        }
+
+        .wrong {
+            background-color: var(--wrong-color);
+            color: white;
+        }
+
+        #endMessage {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
+
 <body>
 
-  <h1>Feather Staffle</h1>
-  <p>Day #1</p>
+    <h1>Feather Staffle</h1>
+    <div class="day-counter" id="dayCounter">Day #1</div>
 
-  <input id="guessInput" placeholder="Enter a name" />
-  <button id="submitBtn" onclick="handleGuess()">Submit</button>
+    <div class="controls">
+        <input id="guessInput" placeholder="Enter a name" list="staffOptions" autocomplete="off" />
+        <datalist id="staffOptions"></datalist>
+        <button id="submitBtn" onclick="handleGuess()">Submit</button>
+    </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Status</th>
-        <th>Rank</th>
-        <th>Year Joined</th>
-        <th>Month Joined </th>
-        <th>Has Reinstated?</th>
-      </tr>
-    </thead>
-    <tbody id="results">
-      <!-- Each guess will be a new row -->
-    </tbody>
-  </table>
+    <div id="endMessage" style="display: none;"></div>
 
-  <script src="game.js"></script>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Rank</th>
+                <th>Year Joined</th>
+                <th>Month Joined</th>
+                <th>Has Reinstated?</th>
+            </tr>
+        </thead>
+        <tbody id="results"></tbody>
+    </table>
+
+    <script>
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pub?output=csv";
+
+        // Configuration
+        const LAUNCH_DATE = new Date("2026-02-07");
+        const DAILY_ANSWERS = {
+            "2026-02-07": "Vikec_"
+        };
+
+        let DATA = [];
+        let ANSWER = null;
+        let guesses = [];
+
+        const submitBtn = document.getElementById("submitBtn");
+        const guessInput = document.getElementById("guessInput");
+        const dayCounter = document.getElementById("dayCounter");
+        const endMessage = document.getElementById("endMessage");
+        const datalist = document.getElementById("staffOptions");
+
+        // Format today's date
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayKey = "dailyGuess_" + todayStr;
+
+        // Dynamic Day Counter setup
+        function updateDayCounter() {
+            const todayDate = new Date(todayStr);
+            const timeDiff = todayDate.getTime() - LAUNCH_DATE.getTime();
+            const dayNum = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
+            dayCounter.textContent = `Day #${dayNum > 0 ? dayNum : 1}`;
+        }
+
+        // Setup Event Listeners
+        guessInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !submitBtn.disabled) {
+                handleGuess();
+            }
+        });
+
+        window.addEventListener("keydown", function (e) {
+            if (e.altKey && (e.key === "r" || e.key === "R")) {
+                e.preventDefault();
+                resetProgress();
+            }
+        });
+
+        function resetProgress() {
+            localStorage.removeItem(todayKey);
+            guesses = [];
+            document.getElementById("results").innerHTML = "";
+            endMessage.style.display = "none";
+            guessInput.disabled = false;
+            guessInput.value = "";
+            submitBtn.disabled = !canPlayToday();
+            alert("Progress reset!");
+        }
+
+        fetch(SHEET_URL)
+            .then(res => res.text())
+            .then(csvText => {
+                const lines = csvText.trim().split("\n");
+
+                DATA = lines.slice(1).map(line => {
+                    const values = line.split(",");
+                    return {
+                        name: values[0]?.trim() ?? "",
+                        status: values[1]?.trim() ?? "",
+                        rank: values[2]?.trim() ?? "",
+                        year: values[3]?.trim() ?? "",
+                        month: values[4]?.trim() ?? "",
+                        reinstate: values[5]?.trim() ?? ""
+                    };
+                }).filter(x => x.name !== "");
+
+                // Populate autocomplete datalist
+                DATA.forEach(item => {
+                    const option = document.createElement("option");
+                    option.value = item.name;
+                    datalist.appendChild(option);
+                });
+
+                ANSWER = getDailyAnswer(DATA);
+                updateDayCounter();
+                loadProgress();
+
+                if (!ANSWER) {
+                    endMessage.textContent = "⚠️ No daily challenge configured for today's date.";
+                    endMessage.style.display = "block";
+                    submitBtn.disabled = true;
+                    guessInput.disabled = true;
+                } else {
+                    submitBtn.disabled = !canPlayToday();
+                }
+            })
+            .catch(err => {
+                console.error("Error loading CSV:", err);
+                alert("Failed to load data. Please ensure your Google Sheet is published to web as a CSV.");
+            });
+
+        function getDailyAnswer(data) {
+            const name = DAILY_ANSWERS[todayStr];
+            if (!name) return null;
+            return data.find(x => x.name.toLowerCase() === name.toLowerCase());
+        }
+
+        function loadProgress() {
+            const savedProgress = JSON.parse(localStorage.getItem(todayKey) || "[]");
+            guesses = savedProgress.slice();
+            guesses.forEach(g => renderResult(g));
+
+            if (guesses.some(g => g.name.toLowerCase() === ANSWER?.name.toLowerCase())) {
+                showEndScreen(true);
+            } else if (guesses.length >= 6) {
+                showEndScreen(false);
+            }
+        }
+
+        function canPlayToday() {
+            if (!ANSWER) return false;
+            if (guesses.some(g => g.name.toLowerCase() === ANSWER.name.toLowerCase())) return false;
+            return guesses.length < 6;
+        }
+
+        function handleGuess() {
+            if (!ANSWER || !canPlayToday()) return;
+
+            const input = guessInput.value.trim();
+            if (!input) return alert("Please enter a name.");
+
+            const guess = DATA.find(x => x.name.toLowerCase() === input.toLowerCase());
+            if (!guess) return alert("Name not found in dataset.");
+
+            if (guesses.some(g => g.name.toLowerCase() === guess.name.toLowerCase())) {
+                return alert("You already guessed that person!");
+            }
+
+            guesses.push(guess);
+            localStorage.setItem(todayKey, JSON.stringify(guesses));
+
+            renderResult(guess);
+            guessInput.value = ""; // Clear input after submission
+
+            if (guess.name.toLowerCase() === ANSWER.name.toLowerCase()) {
+                showEndScreen(true);
+            } else if (guesses.length >= 6) {
+                showEndScreen(false);
+            }
+        }
+
+        function renderResult(guess) {
+            const tbody = document.getElementById("results");
+            const tr = document.createElement("tr");
+
+            // Name Cell
+            const nameCell = document.createElement("td");
+            nameCell.textContent = guess.name;
+            nameCell.classList.add(ANSWER.name.toLowerCase() === guess.name.toLowerCase() ? "correct" : "wrong");
+            tr.appendChild(nameCell);
+
+            // Match attributes
+            ["status", "rank", "year", "month", "reinstate"].forEach(key => {
+                const td = document.createElement("td");
+                let text = guess[key];
+
+                // Add direction indicators for numerical clues (Year/Month)
+                if (key === "year" || key === "month") {
+                    const guessNum = parseInt(guess[key]);
+                    const answerNum = parseInt(ANSWER[key]);
+                    if (!isNaN(guessNum) && !isNaN(answerNum)) {
+                        if (guessNum < answerNum) text += " ⬆️";
+                        else if (guessNum > answerNum) text += " ⬇️";
+                    }
+                }
+
+                td.textContent = text;
+                td.classList.add(ANSWER[key] === guess[key] ? "correct" : "wrong");
+                tr.appendChild(td);
+            });
+
+            // Insert new guesses at the top of the history list for easier viewing
+            tbody.insertBefore(tr, tbody.firstChild);
+        }
+
+        function showEndScreen(correct) {
+            if (correct) {
+                endMessage.textContent = `🎉 Correct! You got it in ${guesses.length} guess${guesses.length > 1 ? "es" : ""}.`;
+                endMessage.style.borderColor = varToString('--correct-color');
+            } else {
+                endMessage.textContent = `❌ All guesses used! The answer was: ${ANSWER.name}`;
+                endMessage.style.borderColor = varToString('--wrong-color');
+            }
+
+            endMessage.style.display = "block";
+            submitBtn.disabled = true;
+            guessInput.disabled = true;
+        }
+
+        function varToString(varName) {
+            return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+        }
+    </script>
 </body>
+
 </html>
