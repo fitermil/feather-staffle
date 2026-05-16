@@ -161,10 +161,9 @@
     <script>
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMrGB2GLfTWfKlWLGvvUns0FFHMoiXtzTqJHPnF-vD1J3owNoxYRCRDMKO1yHqXaOdYAzwAdxNJXmM/pub?output=csv";
 
-        // Configuration
         const LAUNCH_DATE = new Date("2026-02-07");
         const DAILY_ANSWERS = {
-            "2026-02-07": "Vikec_"
+            "2026-05-16": "Vikec_"
         };
 
         let DATA = [];
@@ -177,11 +176,9 @@
         const endMessage = document.getElementById("endMessage");
         const datalist = document.getElementById("staffOptions");
 
-        // Format today's date
         const todayStr = new Date().toISOString().slice(0, 10);
         const todayKey = "dailyGuess_" + todayStr;
 
-        // Dynamic Day Counter setup
         function updateDayCounter() {
             const todayDate = new Date(todayStr);
             const timeDiff = todayDate.getTime() - LAUNCH_DATE.getTime();
@@ -189,7 +186,6 @@
             dayCounter.textContent = `Day #${dayNum > 0 ? dayNum : 1}`;
         }
 
-        // Setup Event Listeners
         guessInput.addEventListener("keydown", function (e) {
             if (e.key === "Enter" && !submitBtn.disabled) {
                 handleGuess();
@@ -231,7 +227,6 @@
                     };
                 }).filter(x => x.name !== "");
 
-                // Populate autocomplete datalist
                 DATA.forEach(item => {
                     const option = document.createElement("option");
                     option.value = item.name;
@@ -297,7 +292,7 @@
             localStorage.setItem(todayKey, JSON.stringify(guesses));
 
             renderResult(guess);
-            guessInput.value = ""; // Clear input after submission
+            guessInput.value = "";
 
             if (guess.name.toLowerCase() === ANSWER.name.toLowerCase()) {
                 showEndScreen(true);
@@ -310,18 +305,15 @@
             const tbody = document.getElementById("results");
             const tr = document.createElement("tr");
 
-            // Name Cell
             const nameCell = document.createElement("td");
             nameCell.textContent = guess.name;
             nameCell.classList.add(ANSWER.name.toLowerCase() === guess.name.toLowerCase() ? "correct" : "wrong");
             tr.appendChild(nameCell);
 
-            // Match attributes
             ["status", "rank", "year", "month", "reinstate"].forEach(key => {
                 const td = document.createElement("td");
                 let text = guess[key];
 
-                // Add direction indicators for numerical clues (Year/Month)
                 if (key === "year" || key === "month") {
                     const guessNum = parseInt(guess[key]);
                     const answerNum = parseInt(ANSWER[key]);
@@ -336,7 +328,6 @@
                 tr.appendChild(td);
             });
 
-            // Insert new guesses at the top of the history list for easier viewing
             tbody.insertBefore(tr, tbody.firstChild);
         }
 
